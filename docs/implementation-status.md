@@ -1,21 +1,26 @@
 # Implementation Status
 
-This repository is an early language prototype, not yet a complete runnable scripting language.
+BrainScript is an early interpreter prototype. Its current build and test suite pass on the main branch (see the GitHub Actions workflow).
 
-## Implemented in TypeScript
+## Implemented
 
-- Tokenizer for identifiers, keywords, numbers, strings, common operators, comments, and line/column tracking.
-- AST declarations for variables, functions, classes, methods, tables, control flow, and expressions.
-- Parser for a subset of declarations, expressions, blocks, if/elseif/else, loops, class syntax, table syntax, anonymous functions, and assignments.
-- Initial lexer and parser tests.
-- Language specification, examples, security principles, roadmap, and GitHub Actions repository checks.
+- TypeScript lexer/tokenizer with source coordinates, comments, strings and escapes.
+- AST and parser for variable declarations, expressions, functions, tables, conditions, loops, classes, methods, assignment, and try/catch syntax.
+- Tree-walking interpreter for arithmetic, comparisons, truthiness, short-circuit logic, branches, while/numeric loops, functions, closures, table values, member access and assignment.
+- Basic class construction, bound instance methods, single inheritance, parent constructor invocation, and a minimal parent-method path.
+- Small standard library surface: print, type, math helpers, table insert/remove, string lower/upper/length.
+- CLI, examples, unit tests, TypeScript build, and GitHub Actions CI.
 
-## Not implemented yet
+## Limitations to address next
 
-- AST interpreter / evaluator.
-- Runtime values, tables, lexical environments, closures, and call frames.
-- Class instantiation, constructor dispatch, method binding, and inheritance runtime.
-- Complete error handling, iterator protocol, modules/imports, REPL, and CLI.
-- A full compile/test pass against the checked-in sources.
+- The interpreter is not yet a drop-in Lua implementation and syntax/semantics are intentionally distinct.
+- Generic iteration is minimal; `pairs` currently returns a table of key/value pairs rather than a full Lua iterator protocol.
+- Class field default expressions and complex parent dispatch need broader conformance tests.
+- Module declarations are parsed but module importing/loading is not implemented.
+- Runtime errors do not yet preserve complete source spans and stack traces through calls.
+- The runtime's safeguards are useful development limits, not a hardened multi-tenant sandbox.
+- No bytecode compiler, debugger, REPL, formatter, or VS Code language server yet.
 
-The next engineering milestone is to make the TypeScript project compile and pass all tests, then implement and test the interpreter in small increments. The example `.brain` files are specification examples until an interpreter is available.
+## Next milestone
+
+Expand runtime conformance tests, verify field initialization and inheritance edge cases, add a proper iterator protocol and module resolver, then improve diagnostics and IDE tooling.
