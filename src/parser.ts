@@ -144,13 +144,14 @@ export class Parser {
         this.consume(")", "Expected ')' after arguments.");
         expr = { type: "Call", callee: expr, args };
       } else if (this.match(".")) {
-        expr = { type: "Get", object: expr, name: this.consumeKind("identifier", "Expected property name.").lexeme };
+        const name = this.consumePropertyName("Expected property name.");
+        expr = { type: "Get", object: expr, name };
       } else if (this.match("[")) {
         const index = this.expression();
         this.consume("]", "Expected ']' after index.");
         expr = { type: "Index", object: expr, index };
       } else if (this.match(":")) {
-        const name = this.consumeKind("identifier", "Expected method name.").lexeme;
+        const name = this.consumePropertyName("Expected method name.");
         const get: Expr = { type: "Get", object: expr, name };
         this.consume("(", "Expected '(' after method name.");
         const args: Expr[] = [];
@@ -161,6 +162,12 @@ export class Parser {
     }
     return expr;
   }
+  private consumePropertyName(message: string): string {
+    const token = this.peek();
+    if (token.kind !== "identifier" && token.kind !== "keyword") throw this.error(token, message);
+    this.advance();
+    return token.lexeme;
+  }
   private primary(): Expr {
     if (this.match("true")) return { type: "Literal", value: true };
     if (this.match("false")) return { type: "Literal", value: false };
@@ -169,10 +176,7 @@ export class Parser {
     if (this.match("self")) return { type: "This" };
     if (this.match("super")) {
       this.consume(".", "Expected '.' after super.");
-      const methodToken = this.peek();
-      if (methodToken.kind !== "identifier" && methodToken.kind !== "keyword") throw this.error(methodToken, "Expected superclass method.");
-      this.advance();
-      return { type: "Super", method: methodToken.lexeme };
+      return { type: "Super", method: this.consumePropertyName("Expected superclass method.") };
     }
     if (this.match("fn", "function")) return { type: "Function", params: this.parameters(), body: this.blockBody() };
     if (this.match("(")) {
@@ -184,14 +188,20 @@ export class Parser {
       const entries: { key: Expr; value: Expr }[] = [];
       while (!this.check("}") && !this.isAtEnd()) {
         let key: Expr;
-        if ((this.checkKind("identifier") || this.checkKind("keyword")) && this.peekNext().lexeme === "=") {
-          key = { type: "Literal", value: this.advance().lexeme };
-          this.advance();
+        let value: Expr;
+        if (this.checkKind("identifier") || this.checkKind("keyword")) {
+          if (this.peekNext().lexeme === "=") {
+            key = { type: "Literal", value: this.advance().lexeme };
+            this.advance();
+            value = this.expression();
+          } else {
+            key = { type: "Literal", value: this.nextImplicitIndex(entries) };
+            value = this.expression();
+          }
         } else {
-          key = this.expression();
-          this.consume("=", "Expected '=' after table key.");
+          key = { type: "Literal", value: this.nextImplicitIndex(entries) };
+          value = this.expression();
         }
-        const value = this.expression();
         entries.push({ key, value });
         if (!this.match(",", ";")) break;
       }
@@ -201,6 +211,15 @@ export class Parser {
     if (this.matchKind("identifier")) return { type: "Variable", name: this.previous().lexeme };
     throw this.error(this.peek(), "Expected expression.");
   }
+
+  private nextImplicitIndex(entries: { key: Expr; value: Expr }[]): number {
+    let max = 0;
+    for (const entry of entries) {
+      if (entry.key.type === "Literal" && typeof entry.key.value === "number" && entry.key.value > max) max = entry.key.value;
+    }
+    return max + 1;
+  }
+
   private parameters(): Param[] {
     this.consume("(", "Expected '(' before parameters.");
     const params: Param[] = [];
