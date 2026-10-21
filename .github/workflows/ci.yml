@@ -10,25 +10,16 @@ permissions:
   contents: read
 
 jobs:
-  repository-check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate JSON example files
-        run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          for path in Path(".").rglob("*.json"):
-              if ".git" not in path.parts:
-                  json.loads(path.read_text(encoding="utf-8"))
-                  print(f"OK {path}")
-          PY
-      - name: Check required documentation and examples
-        run: |
-          test -s README.md
-          test -s docs/language-spec.md
-          test -s docs/roadmap.md
-          test -s docs/security.md
-          test -s examples/logic.brain
-          test -s examples/oop.brain
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Build TypeScript sources
+        run: npm run build
+      - name: Run tests
+        run: npm test
