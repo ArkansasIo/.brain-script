@@ -113,3 +113,8 @@ The example expresses the intended design; it is not yet executable by a release
 ## Name and scope
 
 BrainScript is the language name for this repository. It is intended as an embeddable scripting language for AI tools, simulations, game logic, and automation. An interpreter, bytecode VM, debugger, and editor tooling are separate implementation milestones.
+
+
+## Current implementation status
+
+The repository now contains an initial TypeScript front end: token definitions, a tokenizer, AST types, and a parser with basic unit tests. It does not yet contain an evaluator, so scripts are not fully executable. See [Implementation Status](docs/implementation-status.md) for the distinction between implemented code and planned runtime behavior.
