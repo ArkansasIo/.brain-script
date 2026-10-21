@@ -17,3 +17,7 @@ test("recognizes Lua concatenation operator", () => {
   const tokens = tokenize('"hello" .. " world"');
   assert.equal(tokens[1]?.lexeme, "..");
 });
+
+test("reports unterminated block comments", () => {
+  assert.throws(() => tokenize("--[[ unfinished"), /Unterminated block comment/);
+});
