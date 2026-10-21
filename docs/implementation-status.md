@@ -1,6 +1,6 @@
 # Implementation Status
 
-BrainScript is an early interpreter prototype. Its current build and test suite pass on the main branch (see the GitHub Actions workflow).
+BrainScript is an early interpreter prototype. The recent table-constructor and class-field regression commits passed GitHub Actions; the newest documentation/runtime status commit is still being verified.
 
 ## Implemented
 
@@ -16,7 +16,7 @@ BrainScript is an early interpreter prototype. Its current build and test suite 
 - The interpreter is not yet a drop-in Lua implementation and syntax/semantics are intentionally distinct.
 - Generic iteration is minimal; `pairs` currently returns a table of key/value pairs rather than a full Lua iterator protocol.
 - Class field defaults are evaluated base-to-derived before constructors, but complex parent dispatch and constructor semantics still need broader conformance tests.
-- Module declarations are parsed but module importing/loading is not implemented.
+- Module declarations are parsed but module importing/loading is not implemented; executing a module declaration now raises an explicit runtime error.
 - Runtime errors do not yet preserve complete source spans and stack traces through calls.
 - The runtime's safeguards are useful development limits, not a hardened multi-tenant sandbox.
 - No bytecode compiler, debugger, formatter, or VS Code language server yet.
