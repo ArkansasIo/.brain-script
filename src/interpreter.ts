@@ -26,6 +26,7 @@ export class Interpreter {
   private readonly output: (text: string) => void;
   private readonly maxSteps: number;
   private readonly maxCallDepth: number;
+  private currentClass: BrainClass | null = null;
 
   constructor(options: InterpreterOptions = {}) {
     this.output = options.output ?? ((text) => console.log(text));
@@ -226,9 +227,15 @@ export class Interpreter {
     }
     this.environment.define(name, null);
     const klass = new BrainClass(name, superclass);
-    for (const member of members) {
-      if (member.kind === "field") klass.fieldDefaults.set(member.name, member.initializer);
-      else klass.methods.set(member.name, new BrainFunction(member.name, member.params, member.body, this.environment, member.kind === "init"));
+    const previousClass = this.currentClass;
+    this.currentClass = klass;
+    try {
+      for (const member of members) {
+        if (member.kind === "field") klass.fieldDefaults.set(member.name, member.initializer);
+        else klass.methods.set(member.name, new BrainFunction(member.name, member.params, member.body, this.environment, member.kind === "init"));
+      }
+    } finally {
+      this.currentClass = previousClass;
     }
     this.environment.assign(name, klass);
   }
@@ -356,7 +363,7 @@ export class Interpreter {
     }
     const environment = new Environment(fn.closure);
     if (receiver) environment.define("self", receiver, true);
-    if (receiver && fn.initializer && receiver.klass.superclass) environment.define("super", receiver.klass.superclass, true);
+    if (receiver && this.currentClass?.superclass) environment.define("super", this.currentClass.superclass, true);
     fn.params.forEach((param: Param, index) => {
       let value = args[index];
       if (value === undefined && param.defaultValue) {
