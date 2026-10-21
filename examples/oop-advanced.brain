@@ -1,0 +1,29 @@
+class Entity {
+    init(name, hp) {
+        self.name = name
+        self.hp = hp
+    }
+
+    method damage(amount) {
+        self.hp = self.hp - amount
+    }
+
+    method status() {
+        return self.name .. " HP=" .. self.hp
+    }
+}
+
+class Player extends Entity {
+    init(name, hp, level) {
+        super.init(name, hp)
+        self.level = level
+    }
+
+    method status() {
+        return self.name .. " LV=" .. self.level .. " HP=" .. self.hp
+    }
+}
+
+let hero = Player("Nova", 250, 10)
+hero.damage(40)
+print(hero.status())
