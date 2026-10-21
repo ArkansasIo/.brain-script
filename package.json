@@ -1,14 +1,14 @@
 {
   "name": "@arkansasio/brain-script",
   "version": "0.1.0",
-  "private": false,
   "description": "A Lua-inspired scripting language with logic, tables, functions, and object-oriented syntax.",
   "type": "module",
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests",
-    "check:json": "node -e \"for(const f of ['package.json','tsconfig.json']) JSON.parse(require('fs').readFileSync(f,'utf8')); console.log('JSON OK')\""
+    "start": "npm run build && node dist/src/cli.js",
+    "example": "npm run build && node dist/src/cli.js examples/hello.brain"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
