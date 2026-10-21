@@ -1,23 +1,26 @@
 import { BrainSyntaxError, type Token, type TokenKind } from "./token.js";
 
 const KEYWORDS = new Set([
-  "and", "break", "catch", "class", "const", "continue", "do", "else", "elseif",
-  "end", "extends", "false", "fn", "for", "function", "if", "in", "init", "let",
-  "local", "method", "module", "nil", "not", "or", "return", "self", "super",
-  "then", "throw", "true", "try", "var", "while"
+  "and", "break", "catch", "class", "const", "continue", "else", "elseif",
+  "extends", "false", "fn", "function", "if", "in", "init", "let", "local",
+  "method", "module", "nil", "not", "or", "return", "self", "super", "throw",
+  "true", "try", "var", "while"
 ]);
-const TWO_CHAR = new Set(["==", "~=", "!=", "<=", ">=", "..", "//", "->"]);
-const ONE_CHAR = "+-*/%^#=<>;:,.(){}[]";
+const OPERATORS = ["==", "~=", "!=", "<=", ">=", "..", "//", "->", "+", "-", "*", "/", "%", "^", "#", "=", "<", ">"];
+const PUNCTUATION = new Set(";,.:(){}[]");
 
 export function tokenize(source: string): Token[] {
   const tokens: Token[] = [];
-  let i = 0, line = 1, column = 1;
+  let i = 0;
+  let line = 1;
+  let column = 1;
+
+  const peek = (offset = 0): string => source[i + offset] ?? "";
   const advance = (): string => {
     const ch = source[i++] ?? "";
     if (ch === "\n") { line++; column = 1; } else column++;
     return ch;
   };
-  const peek = (offset = 0): string => source[i + offset] ?? "";
   const add = (kind: TokenKind, start: number, startLine: number, startColumn: number, literal?: Token["literal"]) => {
     const token: Token = { kind, lexeme: source.slice(start, i), line: startLine, column: startColumn };
     if (literal !== undefined) token.literal = literal;
@@ -36,11 +39,13 @@ export function tokenize(source: string): Token[] {
         while (i < source.length && !(peek() === "]" && peek(1) === "]")) advance();
         if (i >= source.length) throw new BrainSyntaxError("Unterminated block comment.", startLine, startColumn);
         advance(); advance();
-      } else while (i < source.length && peek() !== "\n") advance();
+      } else {
+        while (i < source.length && peek() !== "\n") advance();
+      }
       continue;
     }
 
-    if (ch === "\"" || ch === "'") {
+    if (ch === '"' || ch === "'") {
       const quote = advance();
       let value = "";
       let closed = false;
@@ -51,8 +56,8 @@ export function tokenize(source: string): Token[] {
         if (next === "\\") {
           if (i >= source.length) break;
           const escaped = advance();
-          const map: Record<string, string> = { n: "\n", r: "\r", t: "\t", "\\": "\\", '"': '"', "'": "'" };
-          value += map[escaped] ?? escaped;
+          const escapeMap: Record<string, string> = { n: "\n", r: "\r", t: "\t", "\\": "\\", '"': '"', "'": "'" };
+          value += escapeMap[escaped] ?? escaped;
         } else value += next;
       }
       if (!closed) throw new BrainSyntaxError("Unterminated string literal.", startLine, startColumn);
@@ -84,18 +89,18 @@ export function tokenize(source: string): Token[] {
       continue;
     }
 
-    const pair = ch + peek(1);
-    if (TWO_CHAR.has(pair)) {
-      advance(); advance();
+    const operator = OPERATORS.find(candidate => source.startsWith(candidate, i));
+    if (operator) {
+      for (let n = 0; n < operator.length; n++) advance();
       add("operator", start, startLine, startColumn);
       continue;
     }
-    if (ONE_CHAR.includes(ch)) {
+    if (PUNCTUATION.has(ch)) {
       advance();
       add("punctuation", start, startLine, startColumn);
       continue;
     }
-    throw new BrainSyntaxError(`Unexpected character ${JSON.stringify(ch)}.`, line, column);
+    throw new BrainSyntaxError("Unexpected character " + JSON.stringify(ch) + ".", line, column);
   }
 
   tokens.push({ kind: "eof", lexeme: "", line, column });
