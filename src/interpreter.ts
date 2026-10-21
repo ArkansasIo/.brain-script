@@ -274,8 +274,8 @@ export class Interpreter {
           case "+": return this.requireNumber(left, "+") + this.requireNumber(right, "+");
           case "-": return this.requireNumber(left, "-") - this.requireNumber(right, "-");
           case "*": return this.requireNumber(left, "*") * this.requireNumber(right, "*");
-          case "/": if (this.requireNumber(right, "/") === 0) throw new BrainRuntimeError("Division by zero."); return this.requireNumber(left, "/") / right as number;
-          case "//": if (this.requireNumber(right, "//") === 0) throw new BrainRuntimeError("Division by zero."); return Math.floor(this.requireNumber(left, "//") / (right as number));
+          case "/": { const divisor = this.requireNumber(right, "/"); if (divisor === 0) throw new BrainRuntimeError("Division by zero."); return this.requireNumber(left, "/") / divisor; }
+          case "//": { const divisor = this.requireNumber(right, "//"); if (divisor === 0) throw new BrainRuntimeError("Division by zero."); return Math.floor(this.requireNumber(left, "//") / divisor); }
           case "%": return this.requireNumber(left, "%") % this.requireNumber(right, "%");
           case "^": return this.requireNumber(left, "^") ** this.requireNumber(right, "^");
           case "..": return stringify(left) + stringify(right);
