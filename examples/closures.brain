@@ -1,0 +1,14 @@
+-- Lexical closures maintain private state across calls
+module "examples.closures"
+
+fn makeCounter(start = 0) {
+    var value = start
+    return fn() {
+        value = value + 1
+        return value
+    }
+}
+
+let next = makeCounter(40)
+print(next()) -- 41
+print(next()) -- 42
