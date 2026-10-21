@@ -1,13 +1,17 @@
 {
   "name": "@arkansasio/brain-script",
-  "version": "0.1.0",
-  "description": "A Lua-inspired scripting language with logic, tables, functions, and object-oriented syntax.",
+  "version": "0.2.0",
+  "description": "A Lua-inspired scripting language with logic, tables, functions, closures, and object-oriented syntax.",
   "type": "module",
   "engines": { "node": ">=20" },
+  "bin": {
+    "brain-script": "dist/src/cli.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test dist/tests/*.test.js",
     "start": "npm run build && node dist/src/cli.js",
+    "repl": "npm run build && node dist/src/cli.js --repl",
     "example": "npm run build && node dist/src/cli.js examples/hello.brain"
   },
   "devDependencies": {
