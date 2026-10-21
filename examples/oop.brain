@@ -1,0 +1,34 @@
+-- Classes, inheritance, methods, and table-backed object state
+module "examples.oop"
+
+class Entity {
+    init(name, hp = 100) {
+        self.name = name
+        self.hp = hp
+    }
+
+    method damage(amount) {
+        self.hp = math.max(0, self.hp - amount)
+    }
+
+    method isAlive() {
+        return self.hp > 0
+    }
+}
+
+class Player extends Entity {
+    init(name, hp = 100, level = 1) {
+        super.init(name, hp)
+        self.level = level
+        self.inventory = {}
+    }
+
+    method addItem(item) {
+        table.insert(self.inventory, item)
+    }
+}
+
+let hero = Player("Astra", 150, 4)
+hero:addItem("iron key")
+hero.damage(15)
+print(hero.name .. " (level " .. hero.level .. ")")
