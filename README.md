@@ -117,4 +117,4 @@ BrainScript is the language name for this repository. It is intended as an embed
 
 ## Current implementation status
 
-The repository now contains an initial TypeScript front end: token definitions, a tokenizer, AST types, and a parser with basic unit tests. It does not yet contain an evaluator, so scripts are not fully executable. See [Implementation Status](docs/implementation-status.md) for the distinction between implemented code and planned runtime behavior.
+The repository now includes a TypeScript tokenizer, AST, parser, tree-walking interpreter, primitive/table values, function closures, a small standard library, class construction and method dispatch, a CLI, and runtime tests. The implementation is still a prototype: module loading, complete iteration, robust inheritance semantics, source-mapped runtime stack traces, and sandbox hardening remain future work. See [Implementation Status](docs/implementation-status.md).
