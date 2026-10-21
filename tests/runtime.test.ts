@@ -34,3 +34,19 @@ test("executes inheritance with super constructor", () => {
 test("catches script errors", () => {
   assert.deepEqual(run('try { throw "bad" } catch err { print("caught:" .. err) }'), ["caught:bad"]);
 });
+
+test("supports positional array table entries and the length operator", () => {
+  assert.deepEqual(run('let items = {"a", "b", "c"} print(#items) print(items[2])'), ["3", "b"]);
+});
+
+test("supports implicit and keyed table entries mixed together", () => {
+  assert.deepEqual(run('let config = {"first", name = "Astra", "second"} print(config[1] .. ":" .. config.name .. ":" .. config[2])'), ["first:Astra:second"]);
+});
+
+test("initializes inherited class fields before constructors", () => {
+  assert.deepEqual(run('class Base { let baseValue = 10 } class Child extends Base { let childValue = self.baseValue + 5 init() { self.baseValue = self.baseValue + 1 } } let item = Child() print(item.baseValue .. ":" .. item.childValue)'), ["11:15"]);
+});
+
+test("rejects invalid table.insert positions", () => {
+  assert.deepEqual(run('let items = {1, 2} try { table.insert(items, 4, 3) } catch err { print("range") }'), ["range"]);
+});
