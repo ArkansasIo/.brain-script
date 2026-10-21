@@ -1,0 +1,25 @@
+-- Logic and control flow example (proposed BrainScript syntax)
+module "examples.logic"
+
+fn classify(score) {
+    if score >= 90 {
+        return "excellent"
+    } elseif score >= 70 {
+        return "pass"
+    } else {
+        return "retry"
+    }
+}
+
+var total = 0
+for n = 1, 5 {
+    total = total + n
+}
+
+let result = {
+    total = total,
+    status = classify(86),
+    accepted = true and not false
+}
+
+print(result.status .. ": " .. result.total)
