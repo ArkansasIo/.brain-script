@@ -5,7 +5,7 @@ import { Parser } from "./parser.js";
 import { Interpreter } from "./interpreter.js";
 
 export async function startRepl(): Promise<void> {
-  const interpreter = new Interpreter();
+  let interpreter = new Interpreter();
   const rl = createInterface({ input, output, prompt: "brain> " });
 
   console.log("BrainScript REPL");
@@ -18,15 +18,14 @@ export async function startRepl(): Promise<void> {
     if (source === ":quit" || source === ":q") break;
     if (source === ":help") {
       console.log(":help   Show this help");
-      console.log(":clear  Reset the interpreter state");
+      console.log(":clear  Reset interpreter state");
       console.log(":quit   Exit the REPL");
       rl.prompt();
       continue;
     }
     if (source === ":clear") {
-      // A new interpreter is required to reset global state.
-      // The current loop intentionally keeps this command simple and deterministic.
-      console.log("REPL state reset is available by restarting the session.");
+      interpreter = new Interpreter();
+      console.log("Interpreter state reset.");
       rl.prompt();
       continue;
     }
