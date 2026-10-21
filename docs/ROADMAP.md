@@ -8,21 +8,22 @@
 - [x] Variables and expressions
 - [x] Boolean logic
 - [x] Functions and closures
-- [x] Tables
+- [x] Tables (keyed fields and positional entries)
 - [x] Classes and methods
-- [x] Single inheritance
-- [x] Exceptions
+- [x] Single inheritance baseline
+- [x] Exceptions baseline
 - [x] Runtime test suite
 
 ## Phase 2 — Runtime
 
-- [ ] Proper iterator protocol
-- [ ] Module resolver/import system
-- [ ] Better class field initialization
-- [ ] Complete `super` method dispatch
-- [ ] Runtime stack traces
-- [ ] Source-span diagnostics
-- [ ] REPL
+- [ ] Proper iterator protocol (current `pairs(table)` materializes key/value pairs and is not a Lua-compatible iterator triple)
+- [ ] Module resolver/import system (module declarations currently fail clearly instead of silently doing nothing)
+- [x] Instance field initialization follows base-to-derived order before constructor execution
+- [ ] Constructor/field initializer semantics and inherited initializer conformance tests
+- [ ] Complete `super` method dispatch across deeper inheritance chains
+- [ ] Runtime stack traces with function call frames
+- [ ] Source-span diagnostics for runtime errors
+- [x] Interactive REPL with persistent state and working `:clear`
 
 ## Phase 3 — Language Platform
 
@@ -64,3 +65,7 @@
 - [ ] Stable language specification
 - [ ] Versioned standard library
 - [ ] Release packages
+
+## Current implementation notes
+
+The current runtime is a TypeScript tree-walking prototype. The test suite is the executable source of truth for implemented behavior. Features marked as planned are not promised to work yet. The runtime is not a hardened sandbox for untrusted programs.
