@@ -2,7 +2,7 @@ import type { Expr, Param, Stmt } from "./ast.js";
 import { Environment } from "./environment.js";
 
 export type BrainPrimitive = null | boolean | number | string;
-export type BrainValue = BrainPrimitive | BrainTable | BrainFunction | BrainNativeFunction | BrainClass | BrainInstance;
+export type BrainValue = BrainPrimitive | BrainTable | BrainFunction | BrainNativeFunction | BrainClass | BrainInstance | BrainBoundMethod;
 
 export class BrainTable {
   readonly entries = new Map<BrainPrimitive, BrainValue>();
