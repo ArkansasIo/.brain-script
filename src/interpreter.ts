@@ -84,9 +84,11 @@ export class Interpreter {
     tableLib.set("insert", new BrainNativeFunction("table.insert", args => {
       const target = args[0];
       if (!(target instanceof BrainTable)) throw new BrainRuntimeError("table.insert expects a table.");
+      if (args.length !== 2 && args.length !== 3) throw new BrainRuntimeError("table.insert expects (table, value) or (table, index, value).");
       const value = args.length === 3 ? args[2]! : args[1]!;
       const index = args.length === 3 ? this.requireNumber(args[1], "table.insert") : this.sequenceLength(target) + 1;
       const len = this.sequenceLength(target);
+      if (!Number.isInteger(index) || index < 1 || index > len + 1) throw new BrainRuntimeError("table.insert index is out of range.");
       for (let i = len; i >= index; i--) target.set(i + 1, target.get(i));
       target.set(index, value);
       return null;
@@ -94,12 +96,19 @@ export class Interpreter {
     tableLib.set("remove", new BrainNativeFunction("table.remove", args => {
       const target = args[0];
       if (!(target instanceof BrainTable)) throw new BrainRuntimeError("table.remove expects a table.");
-      const index = args.length > 1 ? this.requireNumber(args[1], "table.remove") : this.sequenceLength(target);
+      if (args.length > 2) throw new BrainRuntimeError("table.remove expects (table) or (table, index).");
+      const len = this.sequenceLength(target);
+      const index = args.length > 1 ? this.requireNumber(args[1], "table.remove") : len;
+      if (!Number.isInteger(index) || index < 1 || index > len) return null;
       const value = target.get(index);
-      for (let i = index; i < this.sequenceLength(target); i++) target.set(i, target.get(i + 1));
-      target.set(this.sequenceLength(target), null);
+      for (let i = index; i < len; i++) target.set(i, target.get(i + 1));
+      target.set(len, null);
       return value;
     }, null));
+    tableLib.set("length", new BrainNativeFunction("table.length", args => {
+      if (!(args[0] instanceof BrainTable)) throw new BrainRuntimeError("table.length expects a table.");
+      return this.sequenceLength(args[0]);
+    }, 1));
     this.globals.define("table", tableLib, true);
 
     const stringLib = new BrainTable();
@@ -204,7 +213,7 @@ export class Interpreter {
           this.executeBlock(stmt.catchBody, env);
         }
         break;
-      case "Module": break;
+      case "Module": throw new BrainRuntimeError("Module declarations are reserved for the planned module loader and cannot be executed yet.");
     }
   }
 
@@ -345,14 +354,30 @@ export class Interpreter {
     if (callee instanceof BrainFunction) return this.callFunction(callee, args, null);
     if (callee instanceof BrainClass) {
       const instance = new BrainInstance(callee);
+      this.initializeFields(callee, instance);
       const initializer = callee.findMethod("init");
       if (initializer) this.callFunction(initializer, args, instance);
-      for (const [field, expression] of callee.fieldDefaults) {
-        if (expression) instance.set(field, this.evaluate(expression));
-      }
+      else if (args.length > 0) throw new BrainRuntimeError(`Class ${callee.name} does not define init and accepts no arguments.`);
       return instance;
     }
     throw new BrainRuntimeError("Value is not callable.");
+  }
+
+  private initializeFields(klass: BrainClass, instance: BrainInstance): void {
+    if (klass.superclass) this.initializeFields(klass.superclass, instance);
+    const previous = this.environment;
+    const fieldEnvironment = new Environment(previous);
+    fieldEnvironment.define("self", instance, true);
+    const definingClass = klass;
+    if (definingClass.superclass) fieldEnvironment.define("super", definingClass.superclass, true);
+    try {
+      this.environment = fieldEnvironment;
+      for (const [field, expression] of klass.fieldDefaults) {
+        instance.set(field, expression ? this.evaluate(expression) : null);
+      }
+    } finally {
+      this.environment = previous;
+    }
   }
 
   private callFunction(fn: BrainFunction, args: BrainValue[], receiver: BrainInstance | null): BrainValue {
