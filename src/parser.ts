@@ -169,7 +169,10 @@ export class Parser {
     if (this.match("self")) return { type: "This" };
     if (this.match("super")) {
       this.consume(".", "Expected '.' after super.");
-      return { type: "Super", method: this.consumeKind("identifier", "Expected superclass method.").lexeme };
+      const methodToken = this.peek();
+      if (methodToken.kind !== "identifier" && methodToken.kind !== "keyword") throw this.error(methodToken, "Expected superclass method.");
+      this.advance();
+      return { type: "Super", method: methodToken.lexeme };
     }
     if (this.match("fn", "function")) return { type: "Function", params: this.parameters(), body: this.blockBody() };
     if (this.match("(")) {
