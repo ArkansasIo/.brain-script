@@ -1,5 +1,3 @@
-import type { JsonValue } from "./value.js";
-
 export class BrainRuntimeError extends Error {
   constructor(message: string, public readonly line?: number, public readonly column?: number) {
     super(message);
