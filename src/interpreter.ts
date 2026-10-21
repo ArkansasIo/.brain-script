@@ -363,7 +363,8 @@ export class Interpreter {
     }
     const environment = new Environment(fn.closure);
     if (receiver) environment.define("self", receiver, true);
-    if (receiver && this.currentClass?.superclass) environment.define("super", this.currentClass.superclass, true);
+    const definingClass = this.findDefiningClass(receiver?.klass ?? null, fn);
+    if (receiver && definingClass?.superclass) environment.define("super", definingClass.superclass, true);
     fn.params.forEach((param: Param, index) => {
       let value = args[index];
       if (value === undefined && param.defaultValue) {
@@ -382,6 +383,15 @@ export class Interpreter {
       this.callDepth--;
     }
     return receiver && fn.initializer ? receiver : null;
+  }
+
+  private findDefiningClass(klass: BrainClass | null, fn: BrainFunction): BrainClass | null {
+    let current = klass;
+    while (current) {
+      if (current.methods.get(fn.name) === fn) return current;
+      current = current.superclass;
+    }
+    return null;
   }
 
   private equal(a: BrainValue, b: BrainValue): boolean { return a === b; }
