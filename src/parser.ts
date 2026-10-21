@@ -19,7 +19,10 @@ export class Parser {
   private declaration(): Stmt {
     if (this.match("module")) return { type: "Module", name: String(this.consumeKind("string", "Expected module name.").literal ?? "") };
     if (this.match("class")) return this.classDeclaration();
-    if (this.match("fn", "function") && this.checkKind("identifier")) return this.functionDeclaration();
+    if (this.match("fn", "function")) {
+      if (this.checkKind("identifier")) return this.functionDeclaration();
+      throw this.error(this.peek(), "Expected function name.");
+    }
     if (this.match("let", "var", "const", "local")) {
       const mode = this.previous().lexeme === "local" ? "let" : this.previous().lexeme as "let" | "var" | "const";
       const name = this.consumeKind("identifier", "Expected variable name.").lexeme;
@@ -37,12 +40,10 @@ export class Parser {
     const members: ClassMember[] = [];
     while (!this.check("}") && !this.isAtEnd()) {
       if (this.match("init")) {
-        const params = this.parameters();
-        members.push({ kind: "init", name: "init", params, body: this.blockBody(), initializer: null });
+        members.push({ kind: "init", name: "init", params: this.parameters(), body: this.blockBody(), initializer: null });
       } else if (this.match("method")) {
         const methodName = this.consumeKind("identifier", "Expected method name.").lexeme;
-        const params = this.parameters();
-        members.push({ kind: "method", name: methodName, params, body: this.blockBody(), initializer: null });
+        members.push({ kind: "method", name: methodName, params: this.parameters(), body: this.blockBody(), initializer: null });
       } else if (this.match("let", "var", "const")) {
         const fieldName = this.consumeKind("identifier", "Expected field name.").lexeme;
         const initializer = this.match("=") ? this.expression() : null;
@@ -56,17 +57,13 @@ export class Parser {
 
   private functionDeclaration(): Stmt {
     const name = this.consumeKind("identifier", "Expected function name.").lexeme;
-    const params = this.parameters();
-    return { type: "FunctionDecl", name, params, body: this.blockBody() };
+    return { type: "FunctionDecl", name, params: this.parameters(), body: this.blockBody() };
   }
 
   private statement(): Stmt {
     if (this.match("{")) return { type: "Block", statements: this.blockStatements() };
     if (this.match("if")) return this.ifStatement();
-    if (this.match("while")) {
-      const condition = this.expression();
-      return { type: "While", condition, body: this.blockBody() };
-    }
+    if (this.match("while")) return { type: "While", condition: this.expression(), body: this.blockBody() };
     if (this.match("for")) return this.forStatement();
     if (this.match("return")) {
       const value = this.check("}") || this.check(";") || this.checkKind("eof") ? null : this.expression();
@@ -114,19 +111,15 @@ export class Parser {
   }
 
   private expression(): Expr { return this.assignment(); }
-
   private assignment(): Expr {
     const expr = this.binary(1);
     if (this.match("=")) {
       const value = this.assignment();
-      if (expr.type === "Variable" || expr.type === "Get" || expr.type === "Index") {
-        return { type: "Assign", target: expr, value };
-      }
+      if (expr.type === "Variable" || expr.type === "Get" || expr.type === "Index") return { type: "Assign", target: expr, value };
       throw this.error(this.previous(), "Invalid assignment target.");
     }
     return expr;
   }
-
   private binary(minPrecedence: number): Expr {
     let expr = this.unary();
     while (true) {
@@ -135,12 +128,10 @@ export class Parser {
       if (precedence === undefined || precedence < minPrecedence) break;
       this.advance();
       const next = op === "^" || op === ".." ? precedence : precedence + 1;
-      const right = this.binary(next);
-      expr = { type: "Binary", left: expr, operator: op, right };
+      expr = { type: "Binary", left: expr, operator: op, right: this.binary(next) };
     }
     return expr;
   }
-
   private unary(): Expr {
     if (this.match("-", "not", "#")) return { type: "Unary", operator: this.previous().lexeme, right: this.unary() };
     let expr = this.primary();
@@ -168,7 +159,6 @@ export class Parser {
     }
     return expr;
   }
-
   private primary(): Expr {
     if (this.match("true")) return { type: "Literal", value: true };
     if (this.match("false")) return { type: "Literal", value: false };
@@ -179,10 +169,7 @@ export class Parser {
       this.consume(".", "Expected '.' after super.");
       return { type: "Super", method: this.consumeKind("identifier", "Expected superclass method.").lexeme };
     }
-    if (this.match("fn", "function")) {
-      const params = this.parameters();
-      return { type: "Function", params, body: this.blockBody() };
-    }
+    if (this.match("fn", "function")) return { type: "Function", params: this.parameters(), body: this.blockBody() };
     if (this.match("(")) {
       const expr = this.expression();
       this.consume(")", "Expected ')' after expression.");
@@ -192,7 +179,7 @@ export class Parser {
       const entries: { key: Expr; value: Expr }[] = [];
       while (!this.check("}") && !this.isAtEnd()) {
         let key: Expr;
-        if (this.checkKind("identifier") && this.peekNext().lexeme === "=") {
+        if ((this.checkKind("identifier") || this.checkKind("keyword")) && this.peekNext().lexeme === "=") {
           key = { type: "Literal", value: this.advance().lexeme };
           this.advance();
         } else {
@@ -209,7 +196,6 @@ export class Parser {
     if (this.matchKind("identifier")) return { type: "Variable", name: this.previous().lexeme };
     throw this.error(this.peek(), "Expected expression.");
   }
-
   private parameters(): Param[] {
     this.consume("(", "Expected '(' before parameters.");
     const params: Param[] = [];
@@ -221,19 +207,16 @@ export class Parser {
     this.consume(")", "Expected ')' after parameters.");
     return params;
   }
-
   private blockBody(): Stmt[] {
     this.consume("{", "Expected '{' before block.");
     return this.blockStatements();
   }
-
   private blockStatements(): Stmt[] {
     const statements: Stmt[] = [];
     while (!this.check("}") && !this.isAtEnd()) statements.push(this.declaration());
     this.consume("}", "Expected '}' after block.");
     return statements;
   }
-
   private match(...lexemes: string[]): boolean {
     for (const lexeme of lexemes) if (this.check(lexeme)) { this.advance(); return true; }
     return false;
