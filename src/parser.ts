@@ -19,9 +19,11 @@ export class Parser {
   private declaration(): Stmt {
     if (this.match("module")) return { type: "Module", name: String(this.consumeKind("string", "Expected module name.").literal ?? "") };
     if (this.match("class")) return this.classDeclaration();
-    if (this.match("fn", "function")) {
-      if (this.checkKind("identifier")) return this.functionDeclaration();
-      throw this.error(this.peek(), "Expected function name.");
+    if (this.check("fn") || this.check("function")) {
+      if (this.peekNext().kind === "identifier") {
+        this.advance();
+        return this.functionDeclaration();
+      }
     }
     if (this.match("let", "var", "const", "local")) {
       const mode = this.previous().lexeme === "local" ? "let" : this.previous().lexeme as "let" | "var" | "const";
