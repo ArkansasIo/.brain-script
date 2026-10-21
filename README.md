@@ -2,7 +2,7 @@
 
 BrainScript is a new Lua-inspired, dynamically typed scripting language with explicit object-oriented programming, first-class functions, closures, modules, and familiar logic/control-flow constructs. This repository defines the language and its runtime roadmap.
 
-> **Status:** early language scaffold/specification. The syntax and semantics are proposals, not a production-ready interpreter yet.
+> **Status:** early TypeScript interpreter prototype (v0.2.0). It includes executable syntax, functions, tables, classes, basic inheritance, runtime tests, a CLI, and an interactive REPL. It is not production-ready and should not be treated as a hardened sandbox.
 
 ## Design goals
 
@@ -58,7 +58,7 @@ if player.isAlive() {
 }
 ```
 
-The example expresses the intended design; it is not yet executable by a released interpreter.
+The example documents the intended language style. Check the runtime test suite and examples before assuming every planned language feature is implemented.
 
 ## Core syntax
 
@@ -118,3 +118,28 @@ BrainScript is the language name for this repository. It is intended as an embed
 ## Current implementation status
 
 The repository now includes a TypeScript tokenizer, AST, parser, tree-walking interpreter, primitive/table values, function closures, a small standard library, class construction and method dispatch, a CLI, and runtime tests. The implementation is still a prototype: module loading, complete iteration, robust inheritance semantics, source-mapped runtime stack traces, and sandbox hardening remain future work. See [Implementation Status](docs/implementation-status.md).
+
+
+## Run the prototype
+
+Requirements: Node.js 20+ and npm.
+
+```sh
+npm install
+npm test
+npm run example
+npm run repl
+```
+
+Run a script file directly:
+
+```sh
+npm run build
+node dist/src/cli.js examples/hello.brain
+```
+
+REPL commands: `:help`, `:clear`, and `:quit`.
+
+## Implemented vs planned
+
+See [the runtime roadmap](docs/ROADMAP.md) and [implementation status](docs/implementation-status.md). Module loading and a proper iterator protocol are still planned. Generic `for ... in` currently iterates table entries; `pairs(table)` returns a table of two-element key/value pairs rather than implementing Lua's iterator protocol. Do not use this prototype as a security boundary for untrusted scripts.
