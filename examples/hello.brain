@@ -1,0 +1,7 @@
+module "examples.hello"
+
+fn greet(name) {
+    return "Hello, " .. name .. "!"
+}
+
+print(greet("BrainScript"))
