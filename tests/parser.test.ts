@@ -36,3 +36,13 @@ test("parses table constructors and member access", () => {
   const program = parse('let config = { title = "Demo", retries = 3 }');
   assert.equal(program.body[0]?.type, "VarDecl");
 });
+
+test("parses anonymous functions and numeric loops", () => {
+  const program = parse('let fnValue = fn(x) { return x * 2 } for i = 1, 5 { print(i) }');
+  assert.equal(program.body.length, 2);
+  assert.equal(program.body[1]?.type, "ForNumeric");
+});
+
+test("rejects missing delimiters with source coordinates", () => {
+  assert.throws(() => parse("if true { let x = 2"), /Expected '}' after block/);
+});
